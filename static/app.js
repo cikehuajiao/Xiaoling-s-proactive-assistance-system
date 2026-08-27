@@ -10,6 +10,9 @@ const btnToggle = document.getElementById("btnToggle");
 const btnCam = document.getElementById("btnCam");
 const camVideo = document.getElementById("camVideo");
 const camPlaceholder = document.getElementById("camPlaceholder");
+const camOverlay = document.getElementById("camOverlay");
+const faceBadge = document.getElementById("faceBadge");
+const faceLabel = document.getElementById("faceLabel");
 const chatLog = document.getElementById("chatLog");
 const stRunning = document.getElementById("stRunning");
 const stPlatform = document.getElementById("stPlatform");
@@ -19,11 +22,24 @@ const stMood = document.getElementById("stMood");
 const modeHint = document.getElementById("modeHint");
 
 const PLATFORM_NAME = { netease: "网易云", douyin: "抖音", bilibili: "B站", other: "其他", none: "无" };
+// 表情 → 中文名 / 情绪提示（与后端 mood_rules 判据配合）
+const EXPR_LABEL = {
+  happy: { txt: "开心", icon: "😄" },
+  sad: { txt: "难过", icon: "😢" },
+  angry: { txt: "生气", icon: "😠" },
+  neutral: { txt: "平静", icon: "😐" },
+  surprised: { txt: "惊讶", icon: "😮" },
+  fearful: { txt: "害怕", icon: "😨" },
+  disgusted: { txt: "嫌弃", icon: "🤢" },
+};
 
 let companionOn = false;
 let camStream = null;
 let pollTimer = null;
 let lastMood = null; // 用于去重：心情变化时才推送陪伴话术
+let faceReady = false; // face-api 模型是否加载完成
+let faceLoopId = null; // 表情检测循环 id
+let camCtx = null;
 
 // ---- 共通：向聊天区追加气泡 ----
 function pushBubble(kind, text, moodTag) {
@@ -44,12 +60,7 @@ function pushBubble(kind, text, moodTag) {
 // ---- 摄像头 ----
 async function toggleCam() {
   if (camStream) {
-    camStream.getTracks().forEach((t) => t.stop());
-    camStream = null;
-    camVideo.classList.remove("on");
-    camPlaceholder.classList.remove("hide");
-    camPlaceholder.textContent = "摄像头已关闭";
-    btnCam.textContent = "开启摄像头";
+    stopCam();
     return;
   }
   try {
@@ -58,12 +69,142 @@ async function toggleCam() {
     camVideo.classList.add("on");
     camPlaceholder.classList.add("hide");
     btnCam.textContent = "关闭摄像头";
+    initFaceApi(); // 异步加载模型；不阻塞预览
   } catch (e) {
     camPlaceholder.textContent = "摄像头被拒绝或不可用";
     alert("无法访问摄像头，请在浏览器设置中允许权限。");
   }
 }
+
+function stopCam() {
+  if (camStream) {
+    camStream.getTracks().forEach((t) => t.stop());
+    camStream = null;
+  }
+  camVideo.classList.remove("on");
+  camPlaceholder.classList.remove("hide");
+  camPlaceholder.textContent = "摄像头已关闭";
+  btnCam.textContent = "开启摄像头";
+  stopFaceLoop();
+  faceBadge.hidden = true;
+  faceLabel.hidden = true;
+  camCtx && camCtx.clearRect(0, 0, camOverlay.width, camOverlay.height);
+}
 btnCam.addEventListener("click", toggleCam);
+
+// ---- 表情识别（face-api.js 前端推理，数据不出本机）----
+async function initFaceApi() {
+  if (window.faceapi === undefined) {
+    console.warn("face-api.js 未加载，跳过表情识别");
+    return;
+  }
+  faceBadge.hidden = false;
+  faceBadge.classList.add("loading");
+  faceBadge.textContent = "⏳ 加载表情模型…";
+  try {
+    const modelUrl = "models";
+    faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl);
+    faceapi.nets.faceExpressionNet.loadFromUri(modelUrl);
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl),
+      faceapi.nets.faceExpressionNet.loadFromUri(modelUrl),
+    ]);
+    faceReady = true;
+    faceBadge.classList.remove("loading");
+    faceBadge.textContent = "😊 表情识别中";
+    faceLabel.hidden = false;
+    startFaceLoop();
+  } catch (e) {
+    console.error("表情模型加载失败", e);
+    faceBadge.textContent = "⚠️ 表情识别不可用";
+    faceLabel.hidden = true;
+  }
+}
+
+function startFaceLoop() {
+  if (faceLoopId) return;
+  camOverlay.width = camOverlay.offsetWidth || 320;
+  camOverlay.height = camOverlay.offsetHeight || 240;
+  camCtx = camOverlay.getContext("2d");
+  const loop = async () => {
+    if (!faceReady || !camStream) {
+      faceLoopId = null;
+      return;
+    }
+    try {
+      if (camVideo.readyState >= 2) {
+        const dets = await faceapi
+          .detectAllFaces(camVideo, new faceapi.TinyFaceDetectorOptions())
+          .withFaceExpressions();
+        drawFaces(dets);
+        const expr = getDominantExpr(dets);
+        if (expr) {
+          reportExpression(expr);
+          const l = EXPR_LABEL[expr] || { txt: expr, icon: "🙂" };
+          faceLabel.innerHTML = `<span class="expr">${l.icon}</span>小玲看到你现在${l.txt}~`;
+        } else {
+          faceLabel.innerHTML = `<span class="expr">🙈</span>没找到脸，靠近一点~`;
+        }
+      }
+      faceLoopId = setTimeout(loop, 800); // 每 ~0.8s 检测一次，贴近实时
+    } catch (e) {
+      console.error("表情检测出错", e);
+      faceLoopId = setTimeout(loop, 1500);
+    }
+  };
+  loop();
+}
+
+function stopFaceLoop() {
+  if (faceLoopId) {
+    clearTimeout(faceLoopId);
+    faceLoopId = null;
+  }
+  faceReady = false;
+}
+
+function drawFaces(dets) {
+  camCtx.clearRect(0, 0, camOverlay.height, camOverlay.width);
+  if (!dets.length) return;
+  // 视频是 object-fit:cover，画布坐标需匹配裁剪；这里做近似比例对齐
+  const vw = camVideo.videoWidth, vh = camVideo.videoHeight;
+  const cw = camOverlay.width, ch = camOverlay.height;
+  const scale = Math.max(cw / vw, ch / vh);
+  const dw = vw * scale, dh = vh * scale;
+  const ox = (cw - dw) / 2, oy = (ch - dh) / 2;
+  camCtx.strokeStyle = "rgba(255,150,200,0.9)";
+  camCtx.lineWidth = 2;
+  for (const d of dets) {
+    const box = d.detection.box;
+    const x = box.x * scale + ox, y = box.y * scale + oy;
+    const w = box.width * scale, h = box.height * scale;
+    camCtx.beginPath();
+    camCtx.rect(x, y, w, h);
+    camCtx.stroke();
+  }
+}
+
+function getDominantExpr(dets) {
+  if (!dets.length || !dets[0].expressions) return null;
+  const exps = dets[0].expressions; // {happy,sad,..} 概率
+  let best = null, bestVal = 0;
+  for (const [k, v] of Object.entries(exps)) {
+    if (v > bestVal) { bestVal = v; best = k; }
+  }
+  return best; // 返回概率最高的表情
+}
+
+// 上报当前表情给后端，作为心情判断的补充信号（节流：表情变化才发）
+let lastReportedExpr = null;
+function reportExpression(expr) {
+  if (expr === lastReportedExpr) return;
+  lastReportedExpr = expr;
+  fetch(`${API}/api/face`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ expression: expr }),
+  }).catch(() => {});
+}
 
 // ---- 平台启动 ----
 document.querySelectorAll(".btn-app").forEach((btn) => {

@@ -83,12 +83,24 @@ def get_mood():
         dwell_minutes=s["dwell_minutes"],
         switch_count=s["switch_count"],
         idle_minutes=round(s["idle_seconds"] / 60, 1),
+        expression=s["expression"],
     )
     _running["last_mood"] = mood
     return {
         **pick_companion(MOOD_LIBRARY, mood),
         "status": s,
     }
+
+
+@app.post("/api/face")
+def report_expression(payload: dict):
+    """接收前端识别的表情，作为心情判断的补充信号。"""
+    expr = payload.get("expression", "")
+    valid = {"happy", "sad", "angry", "neutral", "surprised", "fearful", "disgusted"}
+    if expr not in valid:
+        return {"ok": False, "detail": "invalid expression"}
+    monitor.state.expression = expr
+    return {"ok": True, "expression": expr}
 
 
 # 托管前端静态文件

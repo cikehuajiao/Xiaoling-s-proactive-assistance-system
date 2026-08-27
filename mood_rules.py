@@ -13,7 +13,7 @@ def _hour_of_day():
     return datetime.now().hour
 
 
-def judge_mood(platform, dwell_minutes, switch_count, idle_minutes, hour=None):
+def judge_mood(platform, dwell_minutes, switch_count, idle_minutes, hour=None, expression=""):
     """根据使用特征推断心情状态。
 
     参数：
@@ -22,9 +22,19 @@ def judge_mood(platform, dwell_minutes, switch_count, idle_minutes, hour=None):
         switch_count  监控期间平台切换次数
         idle_minutes  无操作/空闲分钟数
         hour          当前小时（不传则取系统时间，便于测试注入）
+        expression    前端识别的当前表情: happy/sad/angry/neutral/...
     """
     if hour is None:
         hour = _hour_of_day()
+
+    # 0. 表情强信号：消极表情直接反映当下情绪（优先于长时规则，但熬夜仍会兜底）
+    expr_flags = _expression_flag(expression)
+    if expr_flags == "sad":
+        return "心情低落想倾诉"
+    if expr_flags == "angry":
+        return "有点烦躁"
+    if expr_flags == "fearful":
+        return "感到不安"
 
     # 1. 长时间无操作 → 发呆 / 疲惫
     if idle_minutes >= 8:
@@ -49,6 +59,15 @@ def judge_mood(platform, dwell_minutes, switch_count, idle_minutes, hour=None):
 
     # 6. 其他 → 正常
     return "正常状态"
+
+
+def _expression_flag(expression):
+    """表情 → 情绪倾向。空/neutral/happy/其余视为无强信号。"""
+    return {
+        "sad": "sad",
+        "angry": "angry",
+        "fearful": "fearful",
+    }.get(expression, "")
 
 
 def pick_companion(mood_library, mood_key):
