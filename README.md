@@ -114,6 +114,32 @@ http://localhost:7788
 
 ---
 
+## ✨ (可选) 开启 AI 个性化陪伴
+
+默认使用预设话术库回应。想让小玲根据你的心情**动态生成**更个性化的回复，只需配置一个大模型 API Key（默认接入 DeepSeek，OpenAI 兼容接口，也可切换其他厂商）：
+
+```bash
+# Windows PowerShell 临时设置（当前窗口有效，重开窗口需重设）
+$env:XIAOLING_AI_API_KEY="sk-你的-key"
+$env:XIAOLING_AI_BASE_URL="https://api.deepseek.com/v1"   # 可切换其他兼容供应商
+$env:XIAOLING_AI_MODEL="deepseek-chat"
+python app.py
+```
+
+> 🔑 在 [DeepSeek 开放平台](https://platform.deepseek.com) 注册可获取 Key。
+> 未配置 Key 或调用失败时，小玲会**自动回退**到内置话术库，流程不中断。
+
+### 环境变量说明
+
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `XIAOLING_AI_API_KEY` | 空 | API Key；留空则禁用 AI，走预设话术 |
+| `XIAOLING_AI_BASE_URL` | `https://api.deepseek.com/v1` | OpenAI 兼容接口地址 |
+| `XIAOLING_AI_MODEL` | `deepseek-chat` | 模型名 |
+| `XIAOLING_AI_TIMEOUT` | `15` | 请求超时（秒） |
+
+---
+
 ## 🛠️ 常见问题
 
 **Q：摄像头开不了？**

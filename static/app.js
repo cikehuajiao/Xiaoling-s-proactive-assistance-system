@@ -26,14 +26,19 @@ let pollTimer = null;
 let lastMood = null; // 用于去重：心情变化时才推送陪伴话术
 
 // ---- 共通：向聊天区追加气泡 ----
-function pushBubble(kind, text, moodTag) {
+// kind: ling|advice|mine ; moodTag: 心情标签 ; sourceTag: "AI" 或 "小玲"（可选）
+function pushBubble(kind, text, moodTag, sourceTag) {
   const div = document.createElement("div");
   div.className = `bubble bubble-${kind}`;
+  const meta = document.createElement("span");
+  meta.className = "bubble-meta";
+  meta.textContent = sourceTag ? `· ${sourceTag}` : "";
   if (moodTag) {
     const tag = document.createElement("span");
     tag.className = "mood-tag";
     tag.textContent = moodTag;
     div.appendChild(tag);
+    div.appendChild(meta);
     div.appendChild(document.createElement("br"));
   }
   div.appendChild(document.createTextNode(text));
@@ -99,7 +104,11 @@ async function startCompanion() {
     modeHint.textContent = data.mode === "windows"
       ? "已连接 Windows 窗口监控，正在实时检测前台平台…"
       : "当前为模拟模式（非 Windows 或未装 pywin32），按演示数据轮换平台，方便预览。";
-    pushBubble("ling", "好～我开始了。你尽管去刷，我会一直看着你，陪着你。");
+    pushBubble(
+      "ling",
+      "好～我开始了。你尽管去刷，我会一直看着你，陪着你。" +
+        (data.ai_enabled ? "（我已开启 AI 个性陪伴 ✨）" : "（未配置 AI Key，我用内置话术陪你）")
+    );
     startPolling();
   } catch (e) {
     pushBubble("ling", "没连上后端，请先通过 start.bat 或 python app.py 启动服务。");
@@ -138,8 +147,9 @@ async function pollStatus() {
     stMood.textContent = mood.mood;
     if (mood.mood !== lastMood) {
       lastMood = mood.mood;
-      pushBubble("ling", mood.message, mood.mood);
-      pushBubble("advice", "💡 " + mood.advice, mood.mood);
+      const src = mood.source === "ai" ? "AI 个性回应" : "小玲";
+      pushBubble("ling", mood.message, mood.mood, src);
+      pushBubble("advice", "💡 " + mood.advice, mood.mood, src);
     }
   } catch (e) {
     /* 后端暂时不可达，静默重试即可 */
