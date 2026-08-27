@@ -18,3 +18,5 @@ Thumbs.db
 
 # 日志
 *.log
+# 独立子项目，不纳入本仓库
+arcs_mini/
