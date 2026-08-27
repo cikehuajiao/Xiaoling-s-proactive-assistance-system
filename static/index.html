@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小玲 · 主动陪伴</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- 顶栏 -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">💗</span>
+        <div class="brand-text">
+          <h1>小玲</h1>
+          <span class="tagline">主动陪伴 · 找回状态</span>
+        </div>
+      </div>
+      <div class="companion-toggle">
+        <button id="btnToggle" class="btn btn-toggle is-off">开启主动陪伴</button>
+      </div>
+    </header>
+
+    <!-- 主体 -->
+    <main class="main">
+      <!-- 左栏：摄像头 + 平台入口 -->
+      <aside class="sidebar">
+        <section class="card cam-card">
+          <div class="card-title">📷 摄像头预览</div>
+          <div class="cam-wrap">
+            <video id="camVideo" autoplay playsinline muted></video>
+            <div id="camPlaceholder" class="cam-placeholder">摄像头未开启</div>
+          </div>
+          <button id="btnCam" class="btn btn-ghost">开启摄像头</button>
+        </section>
+
+        <section class="card platform-card">
+          <div class="card-title">🚀 打开平台</div>
+          <div class="platform-btns">
+            <button class="btn btn-app" data-platform="netease">🎵 网易云</button>
+            <button class="btn btn-app" data-platform="douyin">🎬 抖音</button>
+            <button class="btn btn-app" data-platform="bilibili">📺 B站</button>
+          </div>
+        </section>
+      </aside>
+
+      <!-- 中栏：陪伴对话流 -->
+      <section class="card chat-card">
+        <div class="card-title">💬 小玲的陪伴</div>
+        <div id="chatLog" class="chat-log">
+          <div class="bubble bubble-ling">
+            嗨，我是小玲呀～ 点击右上角"开启主动陪伴"，我就会开始看着你、陪你啦。
+          </div>
+        </div>
+      </section>
+
+      <!-- 右栏：监控状态 -->
+      <aside class="sidebar">
+        <section class="card status-card">
+          <div class="card-title">📡 监控状态</div>
+          <div class="status-grid">
+            <div class="stat"><span class="label">状态</span><span id="stRunning" class="value">未开启</span></div>
+            <div class="stat"><span class="label">当前平台</span><span id="stPlatform" class="value">—</span></div>
+            <div class="stat"><span class="label">停留时长</span><span id="stDwell" class="value">0 分钟</span></div>
+            <div class="stat"><span class="label">切换次数</span><span id="stSwitch" class="value">0</span></div>
+            <div class="stat"><span class="label">心情状态</span><span id="stMood" class="value">—</span></div>
+          </div>
+          <div class="mode-hint" id="modeHint"></div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      小玲 · 本地运行 · 画面与数据不离开你的电脑 💜
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
