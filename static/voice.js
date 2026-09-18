@@ -32,8 +32,10 @@
   }
 
   function camClickIf(shouldClose) {
-    const isOpen = camBtn && camBtn.textContent === "关闭摄像头";
-    if (isOpen !== shouldClose && camBtn) camBtn.click();
+    if (!camBtn) return;
+    const isOpen = camBtn.textContent === "关闭摄像头";
+    // 关闭指令仅在已开启时点击；打开指令仅在未开启时点击
+    if (shouldClose ? isOpen : !isOpen) camBtn.click();
   }
 
   let recognition = null;
@@ -91,7 +93,6 @@
 
       recognition.start();
       setUI(true);
-      pushBubble("ling", "我在听哦～试着说一句“开启主动陪伴”，或者“打开网易云”。");
     } catch (e) {
       pushBubble("ling", "语音启动失败了，请检查浏览器麦克风权限。");
     }
@@ -134,7 +135,14 @@
     });
   }
 
-  btn.addEventListener("click", () => (listening ? stop() : start()));
+  btn.addEventListener("click", () => {
+    if (listening) {
+      stop();
+      return;
+    }
+    start();
+    pushBubble("ling", "我在听哦～试着说一句“开启主动陪伴”，或者“打开网易云”。");
+  });
 
   if (!supported) {
     btn.disabled = true;
