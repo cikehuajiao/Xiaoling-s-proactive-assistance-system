@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小玲 · 陪伴周报</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="reports.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">💗</span>
+        <div class="brand-text">
+          <h1>陪伴周报</h1>
+          <span class="tagline">小玲帮你记录的心情点滴</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn btn-ghost" href="/">← 返回主界面</a>
+        <button id="btnRefresh" class="btn btn-ghost">刷新</button>
+        <button id="btnClear" class="btn btn-danger">清空日志</button>
+      </div>
+    </header>
+
+    <!-- 统计卡片 -->
+    <section class="stat-row">
+      <div class="stat-card"><span class="stat-num" id="stTotal">0</span><span class="stat-label">陪伴事件</span></div>
+      <div class="stat-card"><span class="stat-num" id="stMoods">0</span><span class="stat-label">心情状态</span></div>
+      <div class="stat-card"><span class="stat-num" id="stFirst">—</span><span class="stat-label">首次记录</span></div>
+      <div class="stat-card"><span class="stat-num" id="stLast">—</span><span class="stat-label">最近记录</span></div>
+    </section>
+
+    <!-- 图表区 -->
+    <main class="charts">
+      <section class="card chart-card">
+        <div class="card-title">🎭 心情分布（近 7 天）</div>
+        <canvas id="moodChart" class="chart-canvas" height="220"></canvas>
+      </section>
+
+      <section class="card chart-card">
+        <div class="card-title">🖥️ 平台停留占比（近 7 天）</div>
+        <canvas id="platformChart" class="chart-canvas" height="220"></canvas>
+      </section>
+
+      <section class="card chart-card chart-wide">
+        <div class="card-title">📅 每日陪伴事件数</div>
+        <canvas id="dailyChart" class="chart-canvas" height="180"></canvas>
+      </section>
+
+      <section class="card chart-card chart-wide">
+        <div class="card-title">😊 表情记录</div>
+        <div id="exprCloud" class="expr-cloud"><span class="empty">暂无表情数据</span></div>
+      </section>
+    </main>
+
+    <!-- 时间线 -->
+    <section class="card timeline-card">
+      <div class="card-title">🕒 最近陪伴时间线</div>
+      <div id="timeline" class="timeline">
+        <div class="empty">还没有记录，去主界面开启主动陪伴吧～</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="reports.js"></script>
+</body>
+</html>
