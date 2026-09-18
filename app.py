@@ -22,6 +22,7 @@ from launcher import launch
 from mood_rules import judge_mood, pick_companion
 from companion_data import MOOD_LIBRARY
 from ai_companion import generate_companion, is_configured
+from session_log import log_event, get_timeline, get_reports, clear_log
 
 app = FastAPI(title="小玲 XiaoLing", version="0.1.0")
 
@@ -86,7 +87,6 @@ def get_mood():
         idle_minutes=round(s["idle_seconds"] / 60, 1),
         expression=s["expression"],
     )
-    _running["last_mood"] = mood
 
     # 优先使用 AI 个性化陪伴；未配置 Key 或调用失败时回退预设话术
     ai = generate_companion(mood, s) if is_configured() else None
@@ -95,9 +95,40 @@ def get_mood():
         resp = {"mood": mood, "message": ai["message"], "advice": ai["advice"], "source": "ai"}
     else:
         resp = {**base, "source": "rule"}
+
+    # 心情变化时才记录日志，并更新 last_mood
+    if _running.get("last_mood") != mood:
+        _running["last_mood"] = mood
+        log_event(
+            mood=mood,
+            platform=s["current_platform"],
+            expression=s["expression"],
+            source=resp["source"],
+            advice=resp.get("advice", ""),
+        )
+
     resp["status"] = s
     resp["ai_enabled"] = is_configured()
     return resp
+
+
+@app.get("/api/logs")
+def logs(limit: int = 50):
+    """最近陪伴事件时间线。"""
+    return {"events": get_timeline(limit)}
+
+
+@app.get("/api/reports")
+def reports(days: int = 7):
+    """陪伴周报聚合统计。"""
+    return get_reports(days)
+
+
+@app.post("/api/logs/clear")
+def logs_clear():
+    """清空陪伴日志。"""
+    clear_log()
+    return {"ok": True}
 
 
 @app.post("/api/face")
@@ -118,6 +149,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def index():
     from fastapi.responses import FileResponse
     return FileResponse("static/index.html")
+
+
+@app.get("/reports.html")
+def reports_page():
+    from fastapi.responses import FileResponse
+    return FileResponse("static/reports.html")
 
 
 if __name__ == "__main__":
