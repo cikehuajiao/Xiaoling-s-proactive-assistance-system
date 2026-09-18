@@ -21,6 +21,7 @@ from monitor import WindowMonitor
 from launcher import launch
 from mood_rules import judge_mood, pick_companion
 from companion_data import MOOD_LIBRARY
+from ai_companion import generate_companion, is_configured
 
 app = FastAPI(title="小玲 XiaoLing", version="0.1.0")
 
@@ -55,7 +56,7 @@ def _start_poller():
 @app.post("/api/companion/start")
 def start_companion():
     monitor.start()
-    return {"ok": True, **monitor.get_status()}
+    return {"ok": True, "ai_enabled": is_configured(), **monitor.get_status()}
 
 
 @app.post("/api/companion/stop")
@@ -86,10 +87,17 @@ def get_mood():
         expression=s["expression"],
     )
     _running["last_mood"] = mood
-    return {
-        **pick_companion(MOOD_LIBRARY, mood),
-        "status": s,
-    }
+
+    # 优先使用 AI 个性化陪伴；未配置 Key 或调用失败时回退预设话术
+    ai = generate_companion(mood, s) if is_configured() else None
+    base = pick_companion(MOOD_LIBRARY, mood)
+    if ai:
+        resp = {"mood": mood, "message": ai["message"], "advice": ai["advice"], "source": "ai"}
+    else:
+        resp = {**base, "source": "rule"}
+    resp["status"] = s
+    resp["ai_enabled"] = is_configured()
+    return resp
 
 
 @app.post("/api/face")
