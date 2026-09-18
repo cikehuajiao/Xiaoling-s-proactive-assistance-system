@@ -107,7 +107,7 @@ async function initFaceApi() {
   faceBadge.classList.add("loading");
   faceBadge.textContent = "⏳ 加载表情模型…";
   try {
-    const modelUrl = "models";
+    const modelUrl = "/static/models";
     faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl);
     faceapi.nets.faceExpressionNet.loadFromUri(modelUrl);
     await Promise.all([

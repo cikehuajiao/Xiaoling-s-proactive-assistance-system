@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>小玲 · 主动陪伴</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <div class="app">
@@ -18,6 +18,7 @@
         </div>
       </div>
       <div class="companion-toggle">
+        <button id="btnVoice" class="btn btn-voice" title="语音唤醒：对电脑说“开启主动陪伴 / 打开抖音”等">🎙️ 语音唤醒</button>
         <a class="btn btn-ghost btn-report" href="/reports.html">📊 陪伴周报</a>
         <button id="btnToggle" class="btn btn-toggle is-off">开启主动陪伴</button>
       </div>
@@ -56,7 +57,7 @@
         <div class="card-title">💬 小玲的陪伴</div>
         <div id="chatLog" class="chat-log">
           <div class="bubble bubble-ling">
-            嗨，我是小玲呀～ 点击右上角"开启主动陪伴"，我就会开始看着你、陪你啦。
+            嗨，我是小玲呀～ 点击右上角"开启主动陪伴"，或者直接对我说一句"开启主动陪伴"、"打开网易云"，我就开始陪你啦。
           </div>
         </div>
       </section>
@@ -82,7 +83,8 @@
     </footer>
   </div>
 
-  <script src="face-api.js"></script>
-  <script src="app.js"></script>
+  <script src="/static/face-api.js"></script>
+  <script src="/static/app.js"></script>
+  <script src="/static/voice.js"></script>
 </body>
 </html>
