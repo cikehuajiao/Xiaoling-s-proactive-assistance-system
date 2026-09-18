@@ -12,6 +12,7 @@
 
 import threading
 import time
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,18 +24,6 @@ from mood_rules import judge_mood, pick_companion
 from companion_data import MOOD_LIBRARY
 from ai_companion import generate_companion, is_configured
 from session_log import log_event, get_timeline, get_reports, clear_log
-
-app = FastAPI(title="小玲 XiaoLing", version="0.1.0")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-monitor = WindowMonitor(interval=2.0)
-_running = {"last_mood": "正常状态"}
 
 
 def _poll_loop():
@@ -48,10 +37,25 @@ def _poll_loop():
         time.sleep(monitor.interval)
 
 
-@app.on_event("startup")
-def _start_poller():
+monitor = WindowMonitor(interval=2.0)
+_running = {"last_mood": "正常状态"}
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
     t = threading.Thread(target=_poll_loop, daemon=True)
     t.start()
+    yield
+
+
+app = FastAPI(title="小玲 XiaoLing", version="1.0.0", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/api/companion/start")
