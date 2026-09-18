@@ -28,6 +28,7 @@ class MonitorState:
     switch_count: int = 0
     total_seconds: float = 0
     idle_seconds: float = 0               # 累计"无操作"时间（标题无变化）
+    expression: str = ""                  # 前端上报的当前表情（happy/sad/...）
     seen_platforms: set = field(default_factory=set)
 
 
@@ -66,6 +67,7 @@ class WindowMonitor:
             "switch_count": s.switch_count,
             "total_seconds": round(s.total_seconds, 1),
             "idle_seconds": round(s.idle_seconds, 1),
+            "expression": s.expression,
             "seen_platforms": sorted(s.seen_platforms),
         }
 

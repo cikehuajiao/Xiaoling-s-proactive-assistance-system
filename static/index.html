@@ -31,8 +31,13 @@
           <div class="cam-wrap">
             <video id="camVideo" autoplay playsinline muted></video>
             <div id="camPlaceholder" class="cam-placeholder">摄像头未开启</div>
+            <canvas id="camOverlay" class="cam-overlay"></canvas>
           </div>
-          <button id="btnCam" class="btn btn-ghost">开启摄像头</button>
+          <div class="cam-tools">
+            <button id="btnCam" class="btn btn-ghost">开启摄像头</button>
+            <span id="faceBadge" class="face-badge" hidden>😊 表情识别中</span>
+          </div>
+          <div id="faceLabel" class="face-label" hidden></div>
         </section>
 
         <section class="card platform-card">
@@ -76,6 +81,7 @@
     </footer>
   </div>
 
+  <script src="face-api.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
