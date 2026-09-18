@@ -50,6 +50,24 @@ body {
   font-size: 14px; border: 1px solid transparent; padding: 10px 14px;
 }
 .btn-report:hover { color: var(--primary); border-color: rgba(255, 111, 145, 0.4); background: rgba(255, 111, 145, 0.06); }
+
+/* 语音唤醒 */
+.btn-voice {
+  background: transparent; color: var(--text-dim);
+  font-size: 14px; border: 1px solid transparent; padding: 10px 14px;
+}
+.btn-voice:hover { color: var(--accent); border-color: rgba(39, 192, 138, 0.4); background: rgba(39, 192, 138, 0.06); }
+.btn-voice:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-voice.is-listening {
+  color: #fff; background: rgba(39, 192, 138, 0.16);
+  border-color: var(--accent); animation: pulseVoice 1.8s ease-out infinite;
+}
+.btn-voice.is-listening::before { content: "🔴"; font-size: 10px; margin-right: 6px; vertical-align: 1px; animation: blink 1.2s infinite; }
+@keyframes pulseVoice {
+  0% { box-shadow: 0 0 0 0 rgba(39, 192, 138, 0.35); }
+  70% { box-shadow: 0 0 0 10px rgba(39, 192, 138, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(39, 192, 138, 0); }
+}
 .btn-toggle.is-on { background: linear-gradient(135deg, var(--primary), var(--primary-soft)); color: #fff; box-shadow: 0 8px 24px rgba(255, 111, 145, 0.35); }
 
 .btn-ghost { width: 100%; margin-top: 12px; background: var(--bg-soft); border: 1px solid var(--border); color: var(--text-dim); }
